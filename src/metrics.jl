@@ -150,7 +150,7 @@ function gaussian_mle(m, x, y, w, offset; agg=mean)
     return metric
 end
 
-function eval(m, f::Function, data)
+function evaluate(m, f::Function, data)
     metric = 0.0f0
     ws = 0.0f0
     for d in data
