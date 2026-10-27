@@ -35,6 +35,7 @@ include("metrics.jl")
 include("callback.jl")
 using .CallBacks
 include("infer.jl")
+include("importance.jl")
 include("entmax.jl")
 include("fit.jl")
 include("MLJ.jl")
