@@ -61,7 +61,7 @@ Training function of NeuroTreeModels' internal API.
 # Arguments
 
 - `config::NeuroTypes`
-- `dtrain`: Must be `<:AbstractDataFrame`  
+- `dtrain`: Any Tables.jl table, such as a `DataFrame`. For a classifier, a target that is not categorical is made so (on a copy).  
 
 # Keyword arguments
 
@@ -94,6 +94,8 @@ function fit(
     target_name = Symbol(target_name)
     weight_name = isnothing(weight_name) ? nothing : Symbol(weight_name)
     offset_name = isnothing(offset_name) ? nothing : Symbol(offset_name)
+    dtrain = as_dataframe(config, dtrain, target_name)
+    deval = isnothing(deval) ? nothing : as_dataframe(config, deval, target_name)
 
     m, cache = init(config, dtrain; feature_names, target_name, weight_name, offset_name)
 
@@ -123,6 +125,20 @@ function fit(
 
     m.info[:logger] = logger
     return m |> cpu
+end
+
+"""
+    as_dataframe(config, data, target_name)
+
+`data`, any Tables.jl table, as a `DataFrame`, with its target made categorical for a classifier
+when it is not already. A new `DataFrame` is made whenever anything changes, so the caller's data is never modified.
+"""
+function as_dataframe(config::NeuroTypes, data, target_name)
+    df = data isa AbstractDataFrame ? data : DataFrame(data)
+    if get_loss_type(config) <: MLogLoss && !(eltype(df[!, target_name]) <: CategoricalValue)
+        df = transform(df, target_name => categorical => target_name)
+    end
+    return df
 end
 
 function fit_iter!(m, cache)

@@ -128,8 +128,9 @@ end
 """
     (m::NeuroTreeModel)(x::AbstractMatrix)
     (m::NeuroTreeModel)(data::AbstractDataFrame)
+    (m::NeuroTreeModel)(data)
 
-Inference for NeuroTreeModel
+Inference for NeuroTreeModel, on a matrix, a `DataFrame` or any other Tables.jl table
 """
 function (m::NeuroTreeModel)(x::AbstractMatrix)
     p = m.chain(x)
@@ -146,6 +147,10 @@ function (m::NeuroTreeModel)(data::AbstractDataFrame; device=:cpu, gpuID=0)
     dinfer = get_df_loader_infer(data; feature_names=m.info[:feature_names], batchsize=2048, device)
     p = infer(m, dinfer)
     return p
+end
+function (m::NeuroTreeModel)(data; device=:cpu, gpuID=0)
+    Tables.istable(data) || throw(ArgumentError("expected a matrix or a Tables.jl table, got $(typeof(data))"))
+    return m(DataFrame(data); device, gpuID)
 end
 
 
